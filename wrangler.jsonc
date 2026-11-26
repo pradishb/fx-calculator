@@ -2,7 +2,7 @@
 // Deploy with `npx wrangler deploy`. Files left out are listed in .assetsignore.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "money-calc",
+  "name": "fx-calculator",
   "compatibility_date": "2026-11-01",
   "assets": {
     "directory": "."

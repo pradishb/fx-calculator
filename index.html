@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Money Calc">
+<meta name="apple-mobile-web-app-title" content="FX Calculator">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#f3f3f1" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0f0f10" media="(prefers-color-scheme: dark)">
@@ -13,7 +13,7 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>Money Calc</title>
+<title>FX Calculator</title>
 <link rel="preload" href="inter-tight.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 /* Inter Tight (latin, variable 400-700), served from this site so it loads with the page and works offline. */
@@ -113,7 +113,7 @@ input{-webkit-user-select:text;user-select:text}
 <body>
 <div class="app">
   <header>
-    <div><h1>Money Calc</h1><div class="sub" id="asof"></div></div>
+    <div><h1>FX Calculator</h1><div class="sub" id="asof"></div></div>
     <button class="pill" id="openRates" aria-label="Currencies and rates">Currencies</button>
   </header>
   <div class="board" id="board" role="list"></div>
@@ -157,7 +157,7 @@ input{-webkit-user-select:text;user-select:text}
     {code:'USD', name:'US dollar',      rate:1,      dec:2},
     {code:'IDR', name:'Indonesian rupiah', rate:18355.5, dec:0}
   ];
-  const KEY = 'moneycalc.v2';
+  const KEY = 'moneycalc.v2'; // from the app's old name; kept so saved lists survive
   const store = {
     get(){ try{ return JSON.parse(localStorage.getItem(KEY)) }catch(e){ return null } },
     set(v){ try{ localStorage.setItem(KEY, JSON.stringify(v)) }catch(e){} }

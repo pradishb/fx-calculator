@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Money Calc icon: dark tile, four keys ($ ¥ €) and the vermilion "=" key.
+  <!-- FX Calculator icon: dark tile, four keys ($ ¥ €) and the vermilion "=" key.
        icon-maskable.svg is the same art, smaller, for Android's cropped icons. -->
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c2c2f"/><stop offset="1" stop-color="#111113"/></linearGradient>

@@ -1,4 +1,4 @@
-# Money Calc
+# FX Calculator
 
 A small currency-converter calculator for the phone. Tap a currency to type in it; every other currency converts live. The keypad does + − × ÷ and %.
 

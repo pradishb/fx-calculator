@@ -1,6 +1,6 @@
 {
-  "name": "Money Calc",
-  "short_name": "Money Calc",
+  "name": "FX Calculator",
+  "short_name": "FX Calculator",
   "description": "Currency converter calculator with live rates.",
   "start_url": "./",
   "scope": "./",

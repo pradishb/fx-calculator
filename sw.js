@@ -1,9 +1,9 @@
-// Lets Money Calc open instantly and without a connection.
+// Lets FX Calculator open instantly and without a connection.
 // - The app's own files: the saved copy is shown straight away, and a fresh copy
 //   is fetched in the background and saved, so updates show up on the next open.
 //   Waiting for the network first made every open as slow as the connection.
 // - Exchange rates aren't touched here: the app keeps its own last rates.
-const CACHE = 'moneycalc-v2';
+const CACHE = 'fxcalc-v1';
 const APP = [
   './',
   'manifest.webmanifest',

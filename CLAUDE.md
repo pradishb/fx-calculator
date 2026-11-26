@@ -1,6 +1,6 @@
-# Money Calc
+# FX Calculator
 
-A small currency-converter calculator web app for me and a friend, used on iPhone via "Add to Home Screen". It's a PWA. The whole app is in `index.html` (no build step, no frameworks); the other files only make it installable and work offline:
+A small currency-converter calculator web app for me and a friend, used on iPhone via "Add to Home Screen". It's a PWA. It was called Money Calc until Nov 2026; repo `pradishb/fx-calculator`. The whole app is in `index.html` (no build step, no frameworks); the other files only make it installable and work offline:
 
 - `manifest.webmanifest`: name, colors and icons for installing.
 - `sw.js`: service worker. App files are served from the cache straight away and refreshed in the background (updates show on the next open); rate requests aren't touched. Don't make the page network-first again: on a slow connection every open then waits for the network. Bump `CACHE` in it when the list of app files changes.
@@ -21,13 +21,13 @@ A small currency-converter calculator web app for me and a friend, used on iPhon
 - Copy/paste: long-press a row (or right-click) for a menu with Copy and Paste; Ctrl/Cmd+C copies the active row and Ctrl/Cmd+V pastes into it. Copy gives a plain number (1403488.5) so it pastes cleanly into other apps. Paste reads common formats (1,403,488.50, 1.403.488,50, Rp 1 403 488, $12.5) and makes that row active. A small toast with a check mark confirms each one. The menu and toast are styled like iOS's edit menu (frosted, thin dividers); no black boxes or outlines.
 - Text can't be selected anywhere (no iOS selection handles or callouts), except in the currency search box.
 - Layout always fits exactly one screen (100dvh), no scrolling. Rows share the height; long numbers shrink to fit instead of being cut off.
-- User's currency list is saved in localStorage (key `moneycalc.v2`).
+- User's currency list is saved in localStorage (key `moneycalc.v2`, from the app's old name Money Calc; don't rename it or saved lists are lost).
 
 ## Design
 White board, near-black ink, one vermilion accent (#e8452c) on the active row and "=" key. Font: Inter Tight (self-hosted, `inter-tight.woff2`), tabular figures. Light and dark themes. Side-by-side layout on wide screens.
 
 ## Hosting
-Live at https://calc.pradish.com.np, a Cloudflare Worker (`money-calc`) that serves the folder as static files (`wrangler.jsonc`). Deploy with `npx wrangler deploy` from this folder; wrangler needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (in bws as `cf-account-api-token` and `cf-account-id`). Files that aren't part of the site (docs, config) are listed in `.assetsignore`; add new ones there. No Netlify. The service worker only runs over https, not when `index.html` is opened as a file.
+Live at https://calc.pradish.com.np, a Cloudflare Worker (`fx-calculator`) that serves the folder as static files (`wrangler.jsonc`). Deploy with `npx wrangler deploy` from this folder; wrangler needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (in bws as `cf-account-api-token` and `cf-account-id`). Files that aren't part of the site (docs, config) are listed in `.assetsignore`; add new ones there. No Netlify. The service worker only runs over https, not when `index.html` is opened as a file.
 
 ## Preferences
 - Keep all the app's code in `index.html`; other files are only for the PWA (manifest, service worker, icons, font).
