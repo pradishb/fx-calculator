@@ -31,7 +31,7 @@
 *{box-sizing:border-box;min-width:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 "Inter Tight",system-ui,-apple-system,sans-serif;overflow-x:clip;font-variant-numeric:tabular-nums}
-button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-action:manipulation}
 button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 .app{max-width:980px;margin:0 auto;height:100vh;height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr) auto;
   padding:max(env(safe-area-inset-top),12px) max(env(safe-area-inset-right),14px) max(env(safe-area-inset-bottom),12px) max(env(safe-area-inset-left),14px);gap:12px}
@@ -83,15 +83,30 @@ h1{font-size:22px;line-height:1.05;margin:0;font-weight:700;letter-spacing:-.01e
 .btn.main{background:var(--acc);color:#fff}
 .note{font-size:13px;color:var(--mute);margin:6px 0 10px}
 .err{color:var(--acc);font-size:13px;min-height:18px;margin-top:6px}
-.row{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
-.row.pressed{box-shadow:inset 0 0 0 3px var(--ink)}
-/* long-press menu on a row, and the "Copied" toast */
-.menu{position:fixed;z-index:6;display:flex;gap:6px;padding:6px;border-radius:16px;background:var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+/* No text selection or iOS callouts anywhere, except the search box */
+body{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+input{-webkit-user-select:text;user-select:text}
+.row.pressed{background:light-dark(#f6f6f4,#232326)}
+.row.on.pressed{background:light-dark(#fbe0d9,#45201a)}
+/* long-press menu, styled like iOS's edit menu: frosted, thin dividers, a small pointer */
+.menu{--glass:light-dark(rgba(250,250,250,.86),rgba(48,48,52,.86));
+  position:fixed;z-index:6;display:flex;border-radius:12px;background:var(--glass);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);
+  box-shadow:0 0 0 .5px light-dark(rgba(0,0,0,.08),rgba(255,255,255,.08)),0 6px 24px rgba(0,0,0,.16)}
+.menu::after{content:"";position:absolute;left:var(--tip,50%);top:100%;margin-left:-8px;
+  border:8px solid transparent;border-top-color:var(--glass);border-bottom:0}
+.menu.below::after{top:auto;bottom:100%;border-top:0;border-bottom:8px solid var(--glass)}
 .menu[hidden],.toast[hidden]{display:none}
-.menu button{min-height:44px;min-width:76px;padding:0 14px;border-radius:12px;color:var(--card);font-weight:600;font-size:16px}
-.menu button:active{background:rgba(127,127,127,.3)}
-.toast{position:fixed;z-index:7;left:50%;bottom:max(env(safe-area-inset-bottom),16px);transform:translateX(-50%);max-width:calc(100% - 32px);
-  padding:10px 16px;border-radius:22px;background:var(--ink);color:var(--card);font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.menu button{min-height:44px;padding:0 16px;font-size:15px;font-weight:400;color:var(--ink);white-space:nowrap}
+.menu button+button{border-left:.5px solid light-dark(rgba(0,0,0,.18),rgba(255,255,255,.18))}
+.menu button:first-child{border-radius:12px 0 0 12px}.menu button:last-child{border-radius:0 12px 12px 0}
+.menu button:active{background:light-dark(rgba(0,0,0,.08),rgba(255,255,255,.1))}
+.menu button:focus-visible{outline-offset:-3px}
+.toast{position:fixed;z-index:7;left:50%;transform:translateX(-50%);max-width:calc(100% - 32px);
+  display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:20px;
+  background:light-dark(rgba(250,250,250,.9),rgba(48,48,52,.9));-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);
+  box-shadow:0 0 0 .5px light-dark(rgba(0,0,0,.08),rgba(255,255,255,.08)),0 6px 24px rgba(0,0,0,.14);
+  color:var(--ink);font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(prefers-reduced-motion:reduce){.row,.k{transition:none}.k:active{transform:none}}
 </style>
 </head>
@@ -310,13 +325,17 @@ h1{font-size:22px;line-height:1.05;margin:0;font-weight:700;letter-spacing:-.01e
     return Number.isFinite(n) ? (neg ? -n : n) : null;
   }
   let toastTimer;
-  function toast(msg){
-    const el=$('toast'); el.textContent=msg; el.hidden=false;
+  const CHECK = '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="#34c759" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function toast(msg, ok){
+    const el=$('toast'); el.innerHTML=(ok?CHECK:'')+'<span>'+esc(msg)+'</span>'; el.hidden=false;
+    // Float at the bottom of the board, just above the keypad.
+    const board=$('board').getBoundingClientRect();
+    el.style.left=(board.left+board.width/2)+'px'; el.style.top=(board.bottom-el.offsetHeight-12)+'px';
     clearTimeout(toastTimer); toastTimer=setTimeout(()=>{ el.hidden=true; }, 1800);
   }
   async function copyRow(code){
     const text = amountOf(code);
-    try{ await navigator.clipboard.writeText(text); toast('Copied ' + text + ' ' + code); }
+    try{ await navigator.clipboard.writeText(text); toast('Copied ' + text + ' ' + code, true); }
     catch(e){ toast("Couldn't copy"); }
   }
   function pasteInto(code, text){
@@ -325,7 +344,7 @@ h1{font-size:22px;line-height:1.05;margin:0;font-weight:700;letter-spacing:-.01e
     const c = cur(code);
     S.active = c.code; S.expr = String(Number(n.toFixed(Math.max(c.dec, 8)))); fresh = true;
     if(S.expr.replace(/[-.]/g,'').length > 14){ toast('That number is too long'); return render(); }
-    render(); toast('Pasted into ' + c.code);
+    render(); toast('Pasted into ' + c.code, true);
   }
   async function pasteRow(code){
     try{ pasteInto(code, await navigator.clipboard.readText()); }
@@ -340,12 +359,15 @@ h1{font-size:22px;line-height:1.05;margin:0;font-weight:700;letter-spacing:-.01e
     row.classList.add('pressed');
     const m = $('menu'), r = row.getBoundingClientRect();
     m.hidden = false;
-    $('mCopy').textContent = 'Copy ' + menuCode;
-    const left = Math.min(Math.max(8, r.right - m.offsetWidth - 12), innerWidth - m.offsetWidth - 8);
+    const val = row.querySelector('.val').getBoundingClientRect();
+    const aim = val.left + val.width/2; // centre the menu over the number
+    const left = Math.min(Math.max(8, aim - m.offsetWidth/2), innerWidth - m.offsetWidth - 8);
     m.style.left = left + 'px';
-    // Above the row, clear of the finger; below it when there's no room.
-    const above = r.top - m.offsetHeight - 6;
-    m.style.top = (above >= 8 ? above : Math.min(r.bottom + 6, innerHeight - m.offsetHeight - 8)) + 'px';
+    m.style.setProperty('--tip', Math.min(Math.max(16, aim - left), m.offsetWidth - 16) + 'px');
+    // Above the number, clear of the finger; below the row when there's no room.
+    const above = val.top - m.offsetHeight - 12;
+    m.classList.toggle('below', above < 8);
+    m.style.top = (above >= 8 ? above : Math.min(r.bottom + 10, innerHeight - m.offsetHeight - 8)) + 'px';
     $('mCopy').focus({preventScroll:true});
   }
   const closeMenu = () => {
