@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Money Calc">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Money Calc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a pocket tool — quick, clear, friendly, nothing extra.
+   IDEA: the rate board at a money-changer's counter: one row per currency, the big numbers are the point.
+   PICTURE: the live board itself — every currency row updating as you type on the keypad.
+   COLOUR and TYPE: white board, near-black ink, one vermilion accent for the row you're typing in; Inter Tight, tabular figures.
+   LAYOUT: phone first — board on top, keypad pinned below; on wide screens board and keypad sit side by side. */
+:root{color-scheme:light dark;
+  --bg:light-dark(#f3f3f1,#0f0f10);--card:light-dark(#ffffff,#1b1b1d);--ink:light-dark(#141414,#f2f2f0);
+  --mute:light-dark(#6b6b6b,#9a9a9a);--line:light-dark(#e6e6e3,#2a2a2d);--acc:#e8452c;--accSoft:light-dark(#fde9e5,#3a1b16);
+  --key:light-dark(#ffffff,#222225);--keyOp:light-dark(#ececea,#2e2e32)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 "Inter Tight",system-ui,-apple-system,sans-serif;overflow-x:clip;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.app{max-width:980px;margin:0 auto;height:100vh;height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr) auto;
+  padding:max(env(safe-area-inset-top),12px) max(env(safe-area-inset-right),14px) max(env(safe-area-inset-bottom),12px) max(env(safe-area-inset-left),14px);gap:12px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+h1{font-size:22px;line-height:1.05;margin:0;font-weight:700;letter-spacing:-.01em}
+.sub{font-size:13px;color:var(--mute)}
+.pill{min-height:44px;padding:0 16px;border-radius:22px;background:var(--card);border:1px solid var(--line);font-weight:600;font-size:15px}
+.board{background:var(--card);border-radius:22px;border:1px solid var(--line);overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.row{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;width:100%;text-align:left;
+  padding:0 18px;border-top:1px solid var(--line);flex:1 1 0;min-height:0;container-type:size;transition:background .15s}
+.row:first-child{border-top:0}
+.row.on{background:var(--accSoft)}
+.code{width:52px;height:min(40px,70cqh);border-radius:12px;display:grid;place-items:center;font-weight:700;font-size:15px;background:var(--keyOp)}
+.row.on .code{background:var(--acc);color:#fff}
+.mid{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.val{font-size:clamp(16px,min(42cqh,10cqw),40px);font-weight:600;line-height:1.05;white-space:nowrap;overflow:hidden;max-width:100%;letter-spacing:-.02em}
+.nm{font-size:13px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.row.on .nm{color:var(--acc);font-weight:500}
+.wan{color:var(--ink);font-weight:600}
+@container (max-height:60px){.nm{display:none}}
+.keys{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.k{height:clamp(46px,7.2dvh,68px);border-radius:16px;background:var(--key);border:1px solid var(--line);font-size:24px;font-weight:500}
+.k.op{background:var(--keyOp);font-size:26px}
+.k.eq{background:var(--acc);color:#fff;border-color:var(--acc)}
+.k:active{transform:scale(.96)}
+@media(min-width:760px){.app{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:20px}
+  header{grid-column:1/-1}.side{display:flex;flex-direction:column;justify-content:flex-end}.k{height:clamp(52px,11dvh,84px)}}
+/* rates sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:5}
+.scrim.open{display:flex}
+.sheet{background:var(--card);width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:22px 22px 0 0;
+  padding:20px 18px max(env(safe-area-inset-bottom),18px)}
+@media(min-width:600px){.scrim{align-items:center}.sheet{border-radius:22px}}
+.sheet h2{font-size:22px;margin:0 0 4px}
+.rr{display:grid;grid-template-columns:52px minmax(0,1fr) auto 44px;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.rr b{font-size:18px;font-weight:600;white-space:nowrap}
+.x{min-height:44px;border-radius:10px;font-size:22px;color:var(--mute)}
+.add{margin-top:16px}.add label{display:block;font-weight:600;margin-bottom:6px}
+.add input{width:100%}
+.sug{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.sug button{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-size:15px;text-align:left}
+.sug b{margin-right:6px}
+.add input{min-height:44px;font:inherit;font-size:16px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);text-transform:none}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{min-height:44px;padding:0 16px;border-radius:12px;background:var(--keyOp);font-weight:600}
+.btn.main{background:var(--acc);color:#fff}
+.note{font-size:13px;color:var(--mute);margin:6px 0 10px}
+.err{color:var(--acc);font-size:13px;min-height:18px;margin-top:6px}
+@media(prefers-reduced-motion:reduce){.row,.k{transition:none}.k:active{transform:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div><h1>Money Calc</h1><div class="sub" id="asof"></div></div>
+    <button class="pill" id="openRates" aria-label="Currencies and rates">Currencies</button>
+  </header>
+  <div class="board" id="board" role="list"></div>
+  <div class="side">
+    <div class="keys" id="keys"></div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rt">
+    <h2 id="rt">Currencies</h2>
+    <p class="note">What <b>1 USD</b> is worth right now. Rates update automatically.</p>
+    <div id="rateList"></div>
+    <p class="note" id="sheetStatus"></p>
+    <div class="add">
+      <label for="find">Add a currency</label>
+      <input id="find" placeholder="Type a name or code, e.g. euro or EUR" autocomplete="off" autocorrect="off">
+      <div class="sug" id="sug"></div>
+      <div class="err" id="err"></div>
+    </div>
+    <div class="btns">
+      <button class="btn" id="refresh">Refresh now</button>
+      <button class="btn main" id="done" style="margin-left:auto">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+{
+  // Defaults: mid-market rates per 1 USD, looked up late Nov 2026
+  const DEF_DATE = 'Nov 2026';
+  const DEFAULTS = [
+    {code:'NPR', name:'Nepalese rupee', rate:150.53, dec:2},
+    {code:'CNY', name:'Chinese yuan',   rate:6.6659, dec:2},
+    {code:'USD', name:'US dollar',      rate:1,      dec:2},
+    {code:'IDR', name:'Indonesian rupiah', rate:18355.5, dec:0}
+  ];
+  const KEY = 'moneycalc.v2';
+  const store = {
+    get(){ try{ return JSON.parse(localStorage.getItem(KEY)) }catch(e){ return null } },
+    set(v){ try{ localStorage.setItem(KEY, JSON.stringify(v)) }catch(e){} }
+  };
+  const saved = store.get();
+  let S = saved && Array.isArray(saved.cur) && saved.cur.length ? saved
+        : {cur: DEFAULTS.map(c=>({...c})), active:'USD', expr:'100', asof:DEF_DATE};
+  let fresh = true; // next digit replaces the expression
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const save = () => store.set(S);
+
+  // --- safe arithmetic: numbers, + − × ÷, % ---
+  function evaluate(src){
+    const t = src.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-').match(/\d*\.?\d+%?|\d+\.|[+\-*/]/g);
+    if(!t) return null;
+    const out=[], ops=[], prec={'+':1,'-':1,'*':2,'/':2};
+    const apply=()=>{const o=ops.pop(),b=out.pop(),a=out.pop(); if(a===undefined||b===undefined) throw 0;
+      out.push(o==='+'?a+b:o==='-'?a-b:o==='*'?a*b:a/b)};
+    let expectNum = true;
+    for(const x of t){
+      if(/[+\-*/]/.test(x)){
+        if(expectNum){ if(x==='-'){ out.push(0); } else continue; }
+        while(ops.length && prec[ops[ops.length-1]]>=prec[x]) apply();
+        ops.push(x); expectNum=true;
+      } else { out.push(x.endsWith('%') ? parseFloat(x)/100 : parseFloat(x)); expectNum=false; }
+    }
+    if(expectNum && ops.length) ops.pop();
+    try{ while(ops.length) apply(); }catch(e){ return null }
+    const v = out[0];
+    return Number.isFinite(v) ? v : null;
+  }
+
+  const cur = code => S.cur.find(c=>c.code===code) || S.cur[0];
+  let lastGood = 0;
+  function activeValue(){ const v = evaluate(S.expr); if(v!==null) lastGood=v; return S.expr==='' ? 0 : (v ?? lastGood); }
+  const fmt = (n,dec) => new Intl.NumberFormat(undefined,{minimumFractionDigits:0,maximumFractionDigits:dec}).format(n);
+  const hasOp = () => /[+\-−×÷%]/.test(S.expr.replace(/^-/,''));
+
+  // Chinese-style hint: 12,345 -> 1.23万, 184,000,000 -> 1.84亿
+  function wan(n){
+    const x=Math.abs(n), sign=n<0?'-':'';
+    const t=v=>String(Number(v.toFixed(2)));
+    return x>=1e8 ? sign+t(x/1e8)+'亿' : x>=1e4 ? sign+t(x/1e4)+'万' : '';
+  }
+  // shrink a number's font until it fits its row, instead of cutting it off
+  function fitVals(){
+    document.querySelectorAll('.val').forEach(el=>{
+      el.style.fontSize='';
+      let f=parseFloat(getComputedStyle(el).fontSize);
+      while(el.scrollWidth>el.clientWidth+1 && f>12){ f-=1; el.style.fontSize=f+'px'; }
+    });
+  }
+  const fitRO = new ResizeObserver(()=>fitVals());
+  // Nepali-style hint: 151,200 -> 1.51 lakh, 302,400,000 -> 30.24 crore
+  function lakh(n){
+    const x=Math.abs(n), sign=n<0?'-':'';
+    const t=v=>String(Number(v.toFixed(2)));
+    return x>=1e7 ? sign+t(x/1e7)+' crore' : x>=1e5 ? sign+t(x/1e5)+' lakh' : '';
+  }
+  function render(){
+    if(!S.cur.some(c=>c.code===S.active)) S.active = S.cur[0].code;
+    const a = cur(S.active), v = activeValue(), usd = v / a.rate;
+    $('board').innerHTML = S.cur.map(c=>{
+      const on = c.code===S.active;
+      const shown = esc(on && hasOp() ? S.expr
+                      : on && !fresh && S.expr!=='' ? fmtTyped(S.expr)
+                      : fmt(on ? v : usd*c.rate, c.dec));
+      const amt = on ? v : usd*c.rate;
+      const cn = c.code==='CNY' ? wan(amt) : c.code==='NPR' ? lakh(amt) : '';
+      const sub = on && hasOp() ? '= ' + esc(fmt(v,c.dec)) + ' ' + esc(c.code) + (cn ? ' · ' + esc(cn) : '')
+                : cn ? '<span class="wan">' + esc(cn) + '</span> · ' + esc(c.name || c.code) : esc(c.name || c.code);
+      return `<button class="row${on?' on':''}" role="listitem" data-code="${esc(c.code)}" aria-label="${esc(c.code)}">
+        <span class="code">${esc(c.code)}</span>
+        <span class="mid"><span class="val">${shown}</span><span class="nm">${sub}</span></span></button>`;
+    }).join('');
+    fitVals();
+    if(typeof showStatus==='function') showStatus(); else $('asof').textContent = 'Rates: ' + (S.asof || DEF_DATE);
+    save();
+  }
+  // show what the user is typing (keeps trailing "." and zeros), with grouping
+  function fmtTyped(s){
+    const neg = s.startsWith('-'); if(neg) s=s.slice(1);
+    const [i,d] = s.split('.');
+    const g = new Intl.NumberFormat(undefined).format(Number(i||0));
+    const sep = (1.1).toLocaleString().charAt(1);
+    return (neg?'-':'') + g + (d!==undefined ? sep + d : '');
+  }
+
+  // --- keypad ---
+  const KEYS = [['C','op'],['⌫','op'],['%','op'],['÷','op'],
+                ['7'],['8'],['9'],['×','op'],
+                ['4'],['5'],['6'],['−','op'],
+                ['1'],['2'],['3'],['+','op'],
+                ['00'],['0'],['.'],['=','eq']];
+  $('keys').innerHTML = KEYS.map(([k,c])=>`<button class="k ${c||''}" data-k="${k}" aria-label="${k==='⌫'?'Backspace':k==='C'?'Clear':k}">${k}</button>`).join('');
+
+  function press(k){
+    const ops='+−×÷';
+    if(k==='C'){ S.expr=''; fresh=false; }
+    else if(k==='⌫'){ S.expr = fresh ? '' : S.expr.slice(0,-1); fresh=false; }
+    else if(k==='='){ const v=evaluate(S.expr); if(v!==null){ S.expr=trim(v); } fresh=true; }
+    else if(ops.includes(k)){
+      if(S.expr==='' && k!=='−') return;
+      if(ops.includes(S.expr.slice(-1))) S.expr=S.expr.slice(0,-1);
+      S.expr+=k; fresh=false;
+    }
+    else if(k==='%'){ if(/\d$/.test(S.expr)){ S.expr+='%'; fresh=false; } }
+    else { // digits and dot
+      if(fresh){ S.expr=''; fresh=false; }
+      const last = S.expr.split(/[+−×÷]/).pop();
+      if(last.endsWith('%')) return;
+      if(k==='.'){ if(last.includes('.')) return; if(last==='') k='0.'; }
+      if((k==='0'||k==='00') && last==='0') return;
+      if(last==='0' && k!=='.' && !k.startsWith('0.')) S.expr=S.expr.slice(0,-1);
+      if(last.replace('.','').length>=14) return;
+      S.expr+=k;
+    }
+    render();
+  }
+  const trim = v => String(Math.round(v*1e8)/1e8);
+
+  $('keys').addEventListener('click', e=>{ const b=e.target.closest('.k'); if(b) press(b.dataset.k); });
+  $('board').addEventListener('click', e=>{
+    const r=e.target.closest('.row'); if(!r || r.dataset.code===S.active) return;
+    const a=cur(S.active), t=cur(r.dataset.code), v=activeValue();
+    const nv = v / a.rate * t.rate;
+    S.active=t.code; S.expr = String(Number(nv.toFixed(t.dec))); fresh=true; render();
+  });
+  document.addEventListener('keydown', e=>{
+    if($('scrim').classList.contains('open') || e.metaKey || e.ctrlKey) return;
+    const map={'*':'×','x':'×','/':'÷','-':'−','+':'+','Enter':'=','=':'=','Backspace':'⌫','Escape':'C','Delete':'C','%':'%','.':'.',',':'.'};
+    const k = /^\d$/.test(e.key) ? e.key : map[e.key];
+    if(k){ e.preventDefault(); press(k); }
+  });
+
+  // --- currencies sheet: rates are read-only; currencies can be added or removed ---
+  let names = null;
+  try{ names = new Intl.DisplayNames(['en'],{type:'currency'}); }catch(e){}
+  const nameOf = code => { try{ const n = names && names.of(code); return n && n!==code ? n : code; }catch(e){ return code; } };
+  const COMMON = ['EUR','GBP','JPY','KRW','INR','AUD','SGD','MYR','THB','HKD','TWD','PHP','VND','AED','SAR','CAD','CHF','NZD','BDT','LKR','PKR','QAR','KWD','TRY','RUB','BRL','MXN','ZAR'];
+  const rateDigits = r => r>500?0:r>10?2:4;
+  function drawRates(){
+    $('rateList').innerHTML = S.cur.map((c,i)=>`<div class="rr">
+      <span class="code">${esc(c.code)}</span>
+      <span class="nm" style="color:var(--ink)">${esc(c.name||nameOf(c.code))}</span>
+      <b>${esc(fmt(c.rate, rateDigits(c.rate)))}</b>
+      <button class="x" data-del="${i}" aria-label="Remove ${esc(c.code)}">×</button></div>`).join('');
+    $('sheetStatus').textContent = $('asof').textContent;
+    suggest();
+  }
+  function suggest(){
+    const q = $('find').value.trim().toLowerCase();
+    const pool = S.rates ? Object.keys(S.rates) : COMMON;
+    const have = new Set(S.cur.map(c=>c.code));
+    let list = pool.filter(c=>/^[A-Z]{3}$/.test(c) && !have.has(c));
+    if(q) list = list.filter(c=>c.toLowerCase().includes(q) || nameOf(c).toLowerCase().includes(q));
+    else list = COMMON.filter(c=>list.includes(c));
+    list.sort((x,y)=>(x.toLowerCase().startsWith(q)?0:1)-(y.toLowerCase().startsWith(q)?0:1));
+    $('sug').innerHTML = list.slice(0,8).map(c=>`<button data-add="${esc(c)}"><b>${esc(c)}</b>${esc(nameOf(c))}</button>`).join('')
+      || (q ? '<span class="note">No currency matches that.</span>' : '');
+  }
+  const openSheet = ()=>{ $('find').value=''; $('err').textContent=''; drawRates(); $('scrim').classList.add('open'); };
+  const closeSheet = ()=>{ $('scrim').classList.remove('open'); render(); };
+  $('openRates').addEventListener('click', openSheet);
+  $('done').addEventListener('click', closeSheet);
+  $('scrim').addEventListener('click', e=>{ if(e.target.id==='scrim') closeSheet(); });
+  $('find').addEventListener('input', ()=>{ $('err').textContent=''; suggest(); });
+  $('sug').addEventListener('click', e=>{
+    const btn = e.target.closest('[data-add]'); if(!btn) return;
+    const code = btn.dataset.add, r = Number(S.rates && S.rates[code]);
+    if(!(r>0)){ $('err').textContent = 'Connect to the internet to get the '+code+' rate, then try again.'; live(true).then(drawRates); return; }
+    if(S.cur.length>=8){ $('err').textContent='Up to 8 currencies fit on the screen. Remove one first.'; return; }
+    S.cur.push({code, name:nameOf(code), rate:r, dec: r>500?0:2});
+    $('find').value=''; $('err').textContent=''; save(); drawRates();
+  });
+  $('rateList').addEventListener('click', e=>{
+    const i = e.target.dataset.del; if(i===undefined) return;
+    if(S.cur.length<=2){ $('err').textContent='Keep at least two currencies.'; return; }
+    S.cur.splice(Number(i),1); save(); drawRates();
+  });
+  $('refresh').addEventListener('click', async ()=>{
+    $('refresh').textContent='Refreshing…'; await live(true); drawRates(); $('refresh').textContent='Refresh now';
+  });
+
+  // --- Live rates: refreshed on open, when you come back to the app, and hourly ---
+  // Two free sources (no key needed); the second is a backup if the first is down.
+  const SOURCES = [
+    async()=>{ const j=await (await fetch('https://open.er-api.com/v6/latest/USD',{cache:'no-store'})).json();
+               if(j && j.result==='success' && j.rates) return j.rates; throw 0; },
+    async()=>{ const j=await (await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json',{cache:'no-store'})).json();
+               if(!j || !j.usd) throw 0; const o={}; for(const k in j.usd) o[k.toUpperCase()]=j.usd[k]; return o; }
+  ];
+  const HOUR = 36e5;
+  const when = t => new Date(t).toLocaleString(undefined,{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
+  function showStatus(msg){
+    if(msg) S.asof = msg;
+    else if(S.updated && !offline) S.asof = 'live · ' + when(S.updated);
+    $('asof').textContent = 'Rates ' + S.asof;
+  }
+  let busy = false, offline = false;
+  async function live(force){
+    if(busy) return;
+    if(!force && S.updated && Date.now()-S.updated < 10*60e3) return showStatus();
+    busy = true; showStatus(S.updated ? null : 'updating…');
+    for(const src of SOURCES){
+      try{
+        const rates = await src();
+        S.cur.forEach(c=>{ const v=Number(rates[c.code]); if(v>0) c.rate=v; });
+        S.rates = rates; S.updated = Date.now(); busy=false; offline=false;
+        render(); showStatus(); return;
+      }catch(e){}
+    }
+    busy = false; offline = true;
+    showStatus(S.updated ? 'offline · last updated ' + when(S.updated) : 'offline · using saved rates');
+  }
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) live(); });
+  window.addEventListener('online', ()=>live(true));
+  setInterval(()=>live(true), HOUR);
+  render(); showStatus(); live(true); fitRO.observe($('board'));
+}
+</script>
+</body>
+</html>
