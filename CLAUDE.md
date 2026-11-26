@@ -21,8 +21,8 @@ A small currency-converter calculator web app for me and a friend, used on iPhon
 ## Design
 White board, near-black ink, one vermilion accent (#e8452c) on the active row and "=" key. Font: Inter Tight, tabular figures. Light and dark themes. Side-by-side layout on wide screens.
 
-## Hosting plan
-Cloudflare Pages via dashboard drag-and-drop (Workers & Pages → Create application → Pages → Drag and drop your files), uploading the folder with all the app's files (everything except `README.md` and `CLAUDE.md` is needed). No zip, no Netlify. The service worker only runs over https, not when `index.html` is opened as a file.
+## Hosting
+Live at https://calc.pradish.com.np, a Cloudflare Worker (`money-calc`) that serves the folder as static files (`wrangler.jsonc`). Deploy with `npx wrangler deploy` from this folder; wrangler needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (in bws as `cf-account-api-token` and `cf-account-id`). Files that aren't part of the site (docs, config) are listed in `.assetsignore`; add new ones there. No Netlify. The service worker only runs over https, not when `index.html` is opened as a file.
 
 ## Preferences
 - Keep all the app's code in `index.html`; other files are only for the PWA (manifest, service worker, icons).
