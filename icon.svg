@@ -1,12 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Money Calc icon: the vermilion "=" key with a small $ coin.
+  <!-- Money Calc icon: dark tile, four keys ($ ¥ €) and the vermilion "=" key.
        icon-maskable.svg is the same art, smaller, for Android's cropped icons. -->
-  <rect width="512" height="512" fill="#ffffff"/>
-  <g transform="translate(256 256) scale(1.3) translate(-256 -256)">
-    <rect x="124" y="124" width="264" height="264" rx="64" fill="#e8452c"/>
-    <rect x="186" y="210" width="140" height="30" rx="15" fill="#ffffff"/>
-    <rect x="186" y="272" width="140" height="30" rx="15" fill="#ffffff"/>
-    <circle cx="362" cy="150" r="46" fill="#141414" stroke="#ffffff" stroke-width="8"/>
-    <text x="362" y="152" fill="#ffffff" font-family="Inter Tight, Segoe UI, Arial, sans-serif" font-weight="700" font-size="58" text-anchor="middle" dominant-baseline="central">$</text>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c2c2f"/><stop offset="1" stop-color="#111113"/></linearGradient>
+    <linearGradient id="k" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a4a4f"/><stop offset="1" stop-color="#3a3a3e"/></linearGradient>
+    <linearGradient id="acc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f26a4b"/><stop offset="1" stop-color="#e03d24"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <rect x="96" y="96" width="150" height="150" rx="40" fill="url(#k)"/>
+  <rect x="266" y="96" width="150" height="150" rx="40" fill="url(#k)"/>
+  <rect x="96" y="266" width="150" height="150" rx="40" fill="url(#k)"/>
+  <rect x="266" y="266" width="150" height="150" rx="40" fill="url(#acc)"/>
+  <g fill="#fff">
+    <path d="M168.8 211V131H173.9V211ZM171.3 204Q163.9 204 158.4 201.7Q152.9 199.4 149.8 194.9Q146.7 190.5 146.4 184.1H157.8Q158.1 187.4 159.9 189.7Q161.7 191.9 164.6 193Q167.6 194.1 171.2 194.1Q175 194.1 177.9 193Q180.8 191.8 182.4 189.7Q184 187.7 184 184.9Q184 182.4 182.5 180.8Q181.1 179.2 178.5 178.1Q175.9 177 172.5 176.1L165.2 174.2Q157.3 172.2 152.7 168.1Q148.2 163.9 148.2 157Q148.2 151.3 151.2 147.1Q154.3 142.9 159.6 140.5Q164.9 138.1 171.6 138.1Q178.4 138.1 183.6 140.5Q188.7 142.9 191.7 147Q194.6 151.2 194.7 156.6H183.5Q183.1 152.5 179.9 150.2Q176.6 148 171.5 148Q167.9 148 165.3 149Q162.7 150.1 161.3 152Q159.9 153.9 159.9 156.3Q159.9 159 161.5 160.7Q163.1 162.4 165.6 163.4Q168.1 164.4 170.8 165.1L176.7 166.6Q180.3 167.5 183.7 168.9Q187.1 170.4 189.8 172.5Q192.4 174.7 194 177.8Q195.6 180.9 195.6 185Q195.6 190.7 192.7 194.9Q189.8 199.2 184.4 201.6Q179 204 171.3 204Z"/>
+    <path d="M329.5 139 343.8 172.4 335.7 177.8 317.4 139ZM338.2 172.2 352.4 139H364.6L346.2 177.8ZM346.6 169.3V203H335.1V169.3ZM359.7 170.4V177.4H321.4V170.4ZM359.7 182.7V189.8H321.4V182.7Z"/>
+    <path d="M189.3 331.3 186.3 337.9H144.8L147.2 331.3ZM183.5 344.1 180.3 350.9H144.8L147.2 344.1ZM197.2 314.2 192.8 323.5Q191.3 322.3 189.4 321.2Q187.5 320.1 185.2 319.3Q182.9 318.6 180.1 318.6Q175.5 318.6 171.9 321Q168.3 323.5 166.3 328.5Q164.3 333.4 164.3 341.1Q164.3 348.7 166.3 353.7Q168.3 358.6 171.9 361Q175.5 363.4 180.1 363.5Q184.3 363.4 187.4 361.9Q190.5 360.4 192.6 358.7L197 368Q193.6 370.9 189.3 372.4Q184.9 373.9 180.1 373.9Q172.1 373.9 165.9 370Q159.8 366 156.3 358.7Q152.8 351.3 152.7 341.1Q152.8 330.8 156.3 323.4Q159.8 316 165.9 312.1Q172.1 308.1 180.1 308.1Q185.1 308.1 189.4 309.7Q193.7 311.3 197.2 314.2Z"/>
+    <rect x="301" y="312" width="80" height="18" rx="9"/>
+    <rect x="301" y="352" width="80" height="18" rx="9"/>
   </g>
 </svg>

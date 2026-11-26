@@ -5,7 +5,7 @@ A small currency-converter calculator web app for me and a friend, used on iPhon
 - `manifest.webmanifest`: name, colors and icons for installing.
 - `sw.js`: service worker. App files are served from the cache straight away and refreshed in the background (updates show on the next open); rate requests aren't touched. Don't make the page network-first again: on a slow connection every open then waits for the network. Bump `CACHE` in it when the list of app files changes.
 - `inter-tight.woff2`: the font (Inter Tight, latin, variable 400–700), self-hosted and preloaded so there's no wait on Google Fonts.
-- `icon.svg`: the icon (vermilion "=" key with a $ coin). `icon-maskable.svg` is the same art, smaller, inside Android's safe zone. The PNGs (`apple-touch-icon.png` 180, `icon-192.png`, `icon-512.png`, `icon-maskable-192.png`, `icon-maskable-512.png`) are rendered from them; re-render them if the SVGs change.
+- `icon.svg`: the icon, iPhone-style full-bleed: a dark tile with four keys ($ ¥ €) and the vermilion "=" key. The symbols are Inter Tight outlines (paths, not text, so they render without the font). `icon-maskable.svg` is the same art, smaller, inside Android's safe zone. The PNGs (`apple-touch-icon.png` 180, `icon-192.png`, `icon-512.png`, `icon-maskable-192.png`, `icon-maskable-512.png`) are rendered from them; re-render them if the SVGs change. iOS keeps the icon it saw when the app was added, so a new icon needs the app removed and re-added from Safari.
 
 ## What it does
 - Board of currency rows (default: NPR, CNY, USD, IDR). Tap a row to make it the input; the keypad below types into it and all other rows convert live.
