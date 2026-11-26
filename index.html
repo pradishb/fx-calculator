@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Money Calc">
@@ -29,9 +29,9 @@
   --key:light-dark(#ffffff,#222225);--keyOp:light-dark(#ececea,#2e2e32)}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 "Inter Tight",system-ui,-apple-system,sans-serif;overflow-x:clip;font-variant-numeric:tabular-nums}
-button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 .app{max-width:980px;margin:0 auto;height:100vh;height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr) auto;
   padding:max(env(safe-area-inset-top),12px) max(env(safe-area-inset-right),14px) max(env(safe-area-inset-bottom),12px) max(env(safe-area-inset-left),14px);gap:12px}
@@ -180,12 +180,21 @@ h1{font-size:22px;line-height:1.05;margin:0;font-weight:700;letter-spacing:-.01e
     });
   }
   const fitRO = new ResizeObserver(()=>fitVals());
-  // Nepali-style hint: 151,200 -> 1.51 lakh, 302,400,000 -> 30.24 crore
+  // South Asian hint: 151,200 -> 1.51 lakh, 302,400,000 -> 30.24 crore
   function lakh(n){
     const x=Math.abs(n), sign=n<0?'-':'';
     const t=v=>String(Number(v.toFixed(2)));
     return x>=1e7 ? sign+t(x/1e7)+' crore' : x>=1e5 ? sign+t(x/1e5)+' lakh' : '';
   }
+  // Everyone else: 12,500 -> 12.5 thousand, 3,400,000 -> 3.4 million
+  function words(n){
+    const x=Math.abs(n), sign=n<0?'-':'';
+    const t=v=>String(Number(v.toFixed(2)));
+    return x>=1e12 ? sign+t(x/1e12)+' trillion' : x>=1e9 ? sign+t(x/1e9)+' billion'
+         : x>=1e6 ? sign+t(x/1e6)+' million' : x>=1e3 ? sign+t(x/1e3)+' thousand' : '';
+  }
+  const LAKH = ['NPR','INR','PKR','BDT'];
+  const hintFor = (code,n) => code==='CNY' ? wan(n) : LAKH.includes(code) ? lakh(n) : words(n);
   function render(){
     if(!S.cur.some(c=>c.code===S.active)) S.active = S.cur[0].code;
     const a = cur(S.active), v = activeValue(), usd = v / a.rate;
@@ -195,7 +204,7 @@ h1{font-size:22px;line-height:1.05;margin:0;font-weight:700;letter-spacing:-.01e
                       : on && !fresh && S.expr!=='' ? fmtTyped(S.expr)
                       : fmt(on ? v : usd*c.rate, c.dec));
       const amt = on ? v : usd*c.rate;
-      const cn = c.code==='CNY' ? wan(amt) : c.code==='NPR' ? lakh(amt) : '';
+      const cn = hintFor(c.code, amt);
       const sub = on && hasOp() ? '= ' + esc(fmt(v,c.dec)) + ' ' + esc(c.code) + (cn ? ' · ' + esc(cn) : '')
                 : cn ? '<span class="wan">' + esc(cn) + '</span> · ' + esc(c.name || c.code) : esc(c.name || c.code);
       return `<button class="row${on?' on':''}" role="listitem" data-code="${esc(c.code)}" aria-label="${esc(c.code)}">
@@ -220,7 +229,7 @@ h1{font-size:22px;line-height:1.05;margin:0;font-weight:700;letter-spacing:-.01e
                 ['7'],['8'],['9'],['×','op'],
                 ['4'],['5'],['6'],['−','op'],
                 ['1'],['2'],['3'],['+','op'],
-                ['00'],['0'],['.'],['=','eq']];
+                ['000'],['0'],['.'],['=','eq']];
   $('keys').innerHTML = KEYS.map(([k,c])=>`<button class="k ${c||''}" data-k="${k}" aria-label="${k==='⌫'?'Backspace':k==='C'?'Clear':k}">${k}</button>`).join('');
 
   function press(k){
@@ -239,9 +248,10 @@ h1{font-size:22px;line-height:1.05;margin:0;font-weight:700;letter-spacing:-.01e
       const last = S.expr.split(/[+−×÷]/).pop();
       if(last.endsWith('%')) return;
       if(k==='.'){ if(last.includes('.')) return; if(last==='') k='0.'; }
-      if((k==='0'||k==='00') && last==='0') return;
+      if(k==='000' && (last===''||last==='0')) k='0'; // no leading zeros
+      if(k==='0' && last==='0') return;
       if(last==='0' && k!=='.' && !k.startsWith('0.')) S.expr=S.expr.slice(0,-1);
-      if(last.replace('.','').length>=14) return;
+      if(last.replace('.','').length + k.replace('.','').length > 14) return;
       S.expr+=k;
     }
     render();
@@ -346,6 +356,9 @@ h1{font-size:22px;line-height:1.05;margin:0;font-weight:700;letter-spacing:-.01e
   window.addEventListener('online', ()=>live(true));
   setInterval(()=>live(true), HOUR);
   render(); showStatus(); live(true); fitRO.observe($('board'));
+
+  // No pinch zoom: iOS Safari ignores user-scalable=no, but honours this.
+  document.addEventListener('gesturestart', e=>e.preventDefault());
 
   // Offline support (sw.js). Only works when served over http(s), not from a file.
   if('serviceWorker' in navigator && location.protocol.startsWith('http')){
