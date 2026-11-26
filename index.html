@@ -83,6 +83,15 @@ h1{font-size:22px;line-height:1.05;margin:0;font-weight:700;letter-spacing:-.01e
 .btn.main{background:var(--acc);color:#fff}
 .note{font-size:13px;color:var(--mute);margin:6px 0 10px}
 .err{color:var(--acc);font-size:13px;min-height:18px;margin-top:6px}
+.row{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+.row.pressed{box-shadow:inset 0 0 0 3px var(--ink)}
+/* long-press menu on a row, and the "Copied" toast */
+.menu{position:fixed;z-index:6;display:flex;gap:6px;padding:6px;border-radius:16px;background:var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.menu[hidden],.toast[hidden]{display:none}
+.menu button{min-height:44px;min-width:76px;padding:0 14px;border-radius:12px;color:var(--card);font-weight:600;font-size:16px}
+.menu button:active{background:rgba(127,127,127,.3)}
+.toast{position:fixed;z-index:7;left:50%;bottom:max(env(safe-area-inset-bottom),16px);transform:translateX(-50%);max-width:calc(100% - 32px);
+  padding:10px 16px;border-radius:22px;background:var(--ink);color:var(--card);font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(prefers-reduced-motion:reduce){.row,.k{transition:none}.k:active{transform:none}}
 </style>
 </head>
@@ -97,6 +106,12 @@ h1{font-size:22px;line-height:1.05;margin:0;font-weight:700;letter-spacing:-.01e
     <div class="keys" id="keys"></div>
   </div>
 </div>
+
+<div class="menu" id="menu" role="menu" hidden>
+  <button role="menuitem" id="mCopy">Copy</button>
+  <button role="menuitem" id="mPaste">Paste</button>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <div class="scrim" id="scrim">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rt">
@@ -263,12 +278,111 @@ h1{font-size:22px;line-height:1.05;margin:0;font-weight:700;letter-spacing:-.01e
 
   $('keys').addEventListener('click', e=>{ const b=e.target.closest('.k'); if(b) press(b.dataset.k); });
   $('board').addEventListener('click', e=>{
+    if(suppressClick){ suppressClick=false; return; } // the tap that ended a long-press
     const r=e.target.closest('.row'); if(!r || r.dataset.code===S.active) return;
     const a=cur(S.active), t=cur(r.dataset.code), v=activeValue();
     const nv = v / a.rate * t.rate;
     S.active=t.code; S.expr = String(Number(nv.toFixed(t.dec))); fresh=true; render();
   });
+  // --- copy / paste: long-press a row (or right-click) for a menu; Ctrl/Cmd+C and V also work ---
+  // Copies a plain number (1403488.5) so it pastes cleanly into other apps.
+  const amountOf = code => {
+    const a = cur(S.active), c = cur(code), v = activeValue();
+    const n = code===S.active ? v : v / a.rate * c.rate;
+    return String(Number(n.toFixed(c.dec)));
+  };
+  // Reads "1,403,488.50", "1.403.488,50", "Rp 1 403 488" or "$12.5" as a number.
+  function parseAmount(text){
+    let t = String(text||'').trim().replace(/[\s ']/g,'');
+    const neg = /^[-−(]/.test(t) || /^[^\d]*[-−]/.test(t);
+    t = t.replace(/[^\d.,]/g,'');
+    if(!/\d/.test(t)) return null;
+    const dot = t.lastIndexOf('.'), comma = t.lastIndexOf(',');
+    if(dot>=0 && comma>=0){ // both: the last one is the decimal mark
+      t = dot>comma ? t.replace(/,/g,'') : t.replace(/\./g,'').replace(',','.');
+    } else if(comma>=0){ // 1,403,488 is grouping; 12,5 is a decimal
+      t = /^\d{1,3}(,\d{3})+$/.test(t) ? t.replace(/,/g,'') : t.replace(/,/g,'.');
+    } else if(/^\d{1,3}(\.\d{3}){2,}$/.test(t)){ // 1.403.488
+      t = t.replace(/\./g,'');
+    }
+    if((t.match(/\./g)||[]).length>1) return null;
+    const n = Number(t);
+    return Number.isFinite(n) ? (neg ? -n : n) : null;
+  }
+  let toastTimer;
+  function toast(msg){
+    const el=$('toast'); el.textContent=msg; el.hidden=false;
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>{ el.hidden=true; }, 1800);
+  }
+  async function copyRow(code){
+    const text = amountOf(code);
+    try{ await navigator.clipboard.writeText(text); toast('Copied ' + text + ' ' + code); }
+    catch(e){ toast("Couldn't copy"); }
+  }
+  function pasteInto(code, text){
+    const n = parseAmount(text);
+    if(n===null){ toast('No number to paste'); return; }
+    const c = cur(code);
+    S.active = c.code; S.expr = String(Number(n.toFixed(Math.max(c.dec, 8)))); fresh = true;
+    if(S.expr.replace(/[-.]/g,'').length > 14){ toast('That number is too long'); return render(); }
+    render(); toast('Pasted into ' + c.code);
+  }
+  async function pasteRow(code){
+    try{ pasteInto(code, await navigator.clipboard.readText()); }
+    catch(e){ toast("Couldn't read the clipboard"); }
+  }
+
+  // menuArmed: a press began on the menu itself, so the finger lifting off the
+  // row that opened it can't count as tapping a menu button.
+  let menuCode = null, pressTimer = null, pressStart = null, suppressClick = false, menuArmed = false;
+  function openMenu(row){
+    menuCode = row.dataset.code; menuArmed = false;
+    row.classList.add('pressed');
+    const m = $('menu'), r = row.getBoundingClientRect();
+    m.hidden = false;
+    $('mCopy').textContent = 'Copy ' + menuCode;
+    const left = Math.min(Math.max(8, r.right - m.offsetWidth - 12), innerWidth - m.offsetWidth - 8);
+    m.style.left = left + 'px';
+    // Above the row, clear of the finger; below it when there's no room.
+    const above = r.top - m.offsetHeight - 6;
+    m.style.top = (above >= 8 ? above : Math.min(r.bottom + 6, innerHeight - m.offsetHeight - 8)) + 'px';
+    $('mCopy').focus({preventScroll:true});
+  }
+  const closeMenu = () => {
+    $('menu').hidden = true; menuCode = null;
+    document.querySelectorAll('.row.pressed').forEach(r=>r.classList.remove('pressed'));
+  };
+  $('board').addEventListener('pointerdown', e=>{
+    const row = e.target.closest('.row'); if(!row) return;
+    suppressClick = false; pressStart = {x:e.clientX, y:e.clientY};
+    clearTimeout(pressTimer);
+    pressTimer = setTimeout(()=>{ suppressClick = true; openMenu(row); }, 500);
+  });
+  $('board').addEventListener('pointermove', e=>{
+    if(pressStart && Math.hypot(e.clientX-pressStart.x, e.clientY-pressStart.y) > 10) clearTimeout(pressTimer);
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(t=>$('board').addEventListener(t, ()=>clearTimeout(pressTimer)));
+  $('board').addEventListener('contextmenu', e=>{ // right-click, and long-press on Android
+    const row = e.target.closest('.row'); if(!row) return;
+    e.preventDefault(); clearTimeout(pressTimer); suppressClick = true; openMenu(row);
+  });
+  $('menu').addEventListener('pointerdown', ()=>{ menuArmed = true; });
+  const menuItem = action => e => {
+    if(e.detail && !menuArmed) return; // e.detail is 0 for Enter/Space, which is fine
+    const c = menuCode; closeMenu(); action(c);
+  };
+  $('mCopy').addEventListener('click', menuItem(copyRow));
+  $('mPaste').addEventListener('click', menuItem(pasteRow));
+  document.addEventListener('pointerdown', e=>{ if(menuCode && !e.target.closest('#menu')) closeMenu(); }, true);
+  document.addEventListener('paste', e=>{
+    if($('scrim').classList.contains('open')) return; // pasting into the search box
+    e.preventDefault(); pasteInto(S.active, e.clipboardData.getData('text'));
+  });
+
   document.addEventListener('keydown', e=>{
+    if(menuCode && e.key==='Escape'){ closeMenu(); return; }
+    if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='c' && !$('scrim').classList.contains('open')
+       && !String(getSelection())){ e.preventDefault(); copyRow(S.active); return; }
     if($('scrim').classList.contains('open') || e.metaKey || e.ctrlKey) return;
     const map={'*':'×','x':'×','/':'÷','-':'−','+':'+','Enter':'=','=':'=','Backspace':'⌫','Escape':'C','Delete':'C','%':'%','.':'.',',':'.'};
     const k = /^\d$/.test(e.key) ? e.key : map[e.key];

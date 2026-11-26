@@ -17,6 +17,7 @@ A small currency-converter calculator web app for me and a friend, used on iPhon
 - Hints under big amounts: CNY shows 万/亿 (e.g. 3.33万, 1.33亿); NPR, INR, PKR and BDT show lakh/crore (e.g. 1.51 lakh, 30.24 crore); every other currency shows thousand/million/billion/trillion (e.g. 12.5 thousand, 1.4 million). Main numbers always use standard 3-digit commas.
 - Keypad has a `000` key (no `00`). It never makes leading zeros.
 - Zoom is off (no pinch or double-tap zoom), so fast repeated taps on keys always type.
+- Copy/paste: long-press a row (or right-click) for a menu with Copy and Paste; Ctrl/Cmd+C copies the active row and Ctrl/Cmd+V pastes into it. Copy gives a plain number (1403488.5) so it pastes cleanly into other apps. Paste reads common formats (1,403,488.50, 1.403.488,50, Rp 1 403 488, $12.5) and makes that row active. A small toast confirms each one.
 - Layout always fits exactly one screen (100dvh), no scrolling. Rows share the height; long numbers shrink to fit instead of being cut off.
 - User's currency list is saved in localStorage (key `moneycalc.v2`).
 
