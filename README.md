@@ -6,4 +6,9 @@ A small currency-converter calculator for the phone. Tap a currency to type in i
 - Add or remove currencies (2 to 8) under **Currencies**.
 - Big CNY amounts also show 万/亿, and big NPR amounts show lakh/crore.
 
-It's one file, `index.html`, with no build step. Open it in a browser, or host it anywhere static. On iPhone, use **Share → Add to Home Screen**.
+It's a PWA with no build step: the app is `index.html`, plus a manifest, a service worker and icons. Host the folder on any static host over https. Then install it:
+
+- **iPhone:** in Safari, **Share → Add to Home Screen**.
+- **Android / desktop Chrome or Edge:** the **Install** option in the browser menu.
+
+Once it's been opened, it also opens offline, with the last saved rates.
