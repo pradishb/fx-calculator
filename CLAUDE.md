@@ -13,7 +13,7 @@ A small currency-converter calculator web app for me and a friend, used on iPhon
   - Fetched on open, when the app comes back to the foreground, and hourly.
   - Primary source: `https://open.er-api.com/v6/latest/USD`; backup: `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json`.
   - Offline: the app opens from the service worker's cache and uses the last saved rates (built-in fallback rates from Nov 2026).
-- "Currencies" sheet: shows read-only rates (per 1 USD), "Refresh now", add currencies by name/code search (rate comes from live data), remove with ×. Minimum 2, maximum 8 currencies.
+- "Currencies" sheet: shows read-only rates (per 1 USD), "Refresh now", add currencies by name/code search (rate comes from live data), remove with ×, and reorder by dragging a row's ≡ handle (touch or mouse; arrow keys on the handle also work). The board uses the same order. Minimum 2, maximum 8 currencies.
 - Hints under big amounts: CNY shows 万/亿 (e.g. 3.33万, 1.33亿); NPR, INR, PKR and BDT show lakh/crore (e.g. 1.51 lakh, 30.24 crore); every other currency shows thousand/million/billion/trillion (e.g. 12.5 thousand, 1.4 million). Main numbers always use standard 3-digit commas.
 - Keypad has a `000` key (no `00`). It never makes leading zeros.
 - Zoom is off (no pinch or double-tap zoom), so fast repeated taps on keys always type.
