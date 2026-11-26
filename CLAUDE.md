@@ -3,7 +3,8 @@
 A small currency-converter calculator web app for me and a friend, used on iPhone via "Add to Home Screen". It's a PWA. The whole app is in `index.html` (no build step, no frameworks); the other files only make it installable and work offline:
 
 - `manifest.webmanifest`: name, colors and icons for installing.
-- `sw.js`: service worker. App files are network-first (updates show on the next open), fonts are cache-first, and rate requests aren't touched. Bump `CACHE` in it when the list of app files changes.
+- `sw.js`: service worker. App files are served from the cache straight away and refreshed in the background (updates show on the next open); rate requests aren't touched. Don't make the page network-first again: on a slow connection every open then waits for the network. Bump `CACHE` in it when the list of app files changes.
+- `inter-tight.woff2`: the font (Inter Tight, latin, variable 400–700), self-hosted and preloaded so there's no wait on Google Fonts.
 - `icon.svg`: the icon (vermilion "=" key with a $ coin). `icon-maskable.svg` is the same art, smaller, inside Android's safe zone. The PNGs (`apple-touch-icon.png` 180, `icon-192.png`, `icon-512.png`, `icon-maskable-192.png`, `icon-maskable-512.png`) are rendered from them; re-render them if the SVGs change.
 
 ## What it does
@@ -23,12 +24,12 @@ A small currency-converter calculator web app for me and a friend, used on iPhon
 - User's currency list is saved in localStorage (key `moneycalc.v2`).
 
 ## Design
-White board, near-black ink, one vermilion accent (#e8452c) on the active row and "=" key. Font: Inter Tight, tabular figures. Light and dark themes. Side-by-side layout on wide screens.
+White board, near-black ink, one vermilion accent (#e8452c) on the active row and "=" key. Font: Inter Tight (self-hosted, `inter-tight.woff2`), tabular figures. Light and dark themes. Side-by-side layout on wide screens.
 
 ## Hosting
 Live at https://calc.pradish.com.np, a Cloudflare Worker (`money-calc`) that serves the folder as static files (`wrangler.jsonc`). Deploy with `npx wrangler deploy` from this folder; wrangler needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (in bws as `cf-account-api-token` and `cf-account-id`). Files that aren't part of the site (docs, config) are listed in `.assetsignore`; add new ones there. No Netlify. The service worker only runs over https, not when `index.html` is opened as a file.
 
 ## Preferences
-- Keep all the app's code in `index.html`; other files are only for the PWA (manifest, service worker, icons).
+- Keep all the app's code in `index.html`; other files are only for the PWA (manifest, service worker, icons, font).
 - Don't add the hint text "Tap a currency to type in it" back.
 - Don't add manual rate editing.
